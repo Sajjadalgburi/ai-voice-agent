@@ -3,7 +3,15 @@ import WebSocket from "ws";
 import dotenv from "dotenv";
 import fastifyFormBody from "@fastify/formbody";
 import fastifyWs from "@fastify/websocket";
+import fastifyStatic from "@fastify/static";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 import fetch from "node-fetch";
+import path from "node:path";
+
+// Get current file directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Load environment variables from .env file
 dotenv.config();
@@ -20,6 +28,9 @@ if (!OPENAI_API_KEY) {
 const fastify = Fastify();
 fastify.register(fastifyFormBody);
 fastify.register(fastifyWs);
+fastify.register(fastifyStatic, {
+  root: path.join(__dirname, "public"),
+});
 
 // Constants
 const SYSTEM_MESSAGE =
@@ -46,7 +57,7 @@ const LOG_EVENT_TYPES = [
 
 // Root Route
 fastify.get("/", async (request, reply) => {
-  reply.send({ message: "Twilio Media Stream Server is running!" });
+  return reply.sendFile("home.html", path.join(__dirname, "public"));
 });
 
 // Route for Twilio to handle incoming and outgoing calls
@@ -225,7 +236,7 @@ fastify.listen({ port: PORT }, (err) => {
     console.error(err);
     process.exit(1);
   }
-  console.log(`Server is listening on port ${PORT}`);
+  console.log(`Server is listening on port ${PORT}, http://localhost:${PORT}`);
 });
 
 // Function to make ChatGPT API completion call with structured outputs
